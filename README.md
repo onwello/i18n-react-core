@@ -35,7 +35,6 @@ import React from 'react';
 import { 
   TranslationProvider, 
   TranslatedText, 
-  TranslatedH1,
   useTranslation 
 } from '@logistically/i18n-react-core';
 
@@ -43,6 +42,7 @@ const config = {
   defaultLocale: 'en',
   supportedLocales: ['en', 'fr', 'es'],
   translationsPath: 'src/translations',
+  serviceName: 'my-app'
 };
 
 const App = () => (
@@ -56,8 +56,8 @@ const MyComponent = () => {
   
   return (
     <div>
-      <TranslatedH1 key="welcome.title" />
-      <TranslatedText key="welcome.message" params={{ name: 'John' }} />
+      <h1><TranslatedText translationKey="welcome.title" /></h1>
+      <TranslatedText translationKey="welcome.message" params={{ name: 'John' }} />
       <button onClick={() => setLocale('fr')}>Switch to French</button>
     </div>
   );
@@ -71,8 +71,7 @@ import React from 'react';
 import { View } from 'react-native';
 import { 
   TranslationProvider, 
-  TranslatedText, 
-  TranslatedHeading,
+  TranslatedTextRN, 
   useTranslation 
 } from '@logistically/i18n-react-core/react-native';
 
@@ -80,6 +79,7 @@ const config = {
   defaultLocale: 'en',
   supportedLocales: ['en', 'fr', 'es'],
   translationsPath: 'src/translations',
+  serviceName: 'my-app'
 };
 
 const App = () => (
@@ -93,8 +93,8 @@ const MyComponent = () => {
   
   return (
     <View>
-      <TranslatedHeading key="welcome.title" />
-      <TranslatedText key="welcome.message" params={{ name: 'John' }} />
+      <TranslatedTextRN translationKey="welcome.title" />
+      <TranslatedTextRN translationKey="welcome.message" params={{ name: 'John' }} />
     </View>
   );
 };
@@ -140,11 +140,10 @@ const {
 #### `TranslatedText`
 ```tsx
 <TranslatedText 
-  key="translation.key"
+  translationKey="translation.key"
   params={{ name: 'John', count: 5 }}
   locale="fr"
   fallback="Fallback text"
-  component={CustomComponent}
   className="my-class"
   style={{ color: 'red' }}
   debug={true}
@@ -157,7 +156,7 @@ const {
 - `TranslatedLabel`, `TranslatedButton`
 
 #### **Convenience Components (React Native):**
-- `TranslatedText`, `TranslatedView`
+- `TranslatedTextRN`, `TranslatedView`
 - `TranslatedHeading`, `TranslatedSubheading`
 - `TranslatedBody`, `TranslatedCaption`
 
@@ -180,7 +179,8 @@ const deserialized = utils.deserializeContext(serialized);
 
 // Next.js utilities
 const serverTranslations = await utils.getServerSideTranslations('en');
-const serverT = await utils.getServerTranslation('en');
+const serverUtils = await utils.getServerTranslation('en');
+const { t } = serverUtils; // Use the t function from serverUtils
 ```
 
 ## 🏗️ **Architecture**
@@ -211,17 +211,18 @@ const serverT = await utils.getServerTranslation('en');
 ## 🧪 **Testing**
 
 ### **Test Coverage:**
-- ✅ **Core Functionality**: Translation logic, state management
-- ✅ **React Integration**: Hooks, components, context
-- ✅ **SSR Support**: Server-side utilities
+- ✅ **Core Functionality**: Translation logic, state management (92.53%)
+- ✅ **React Integration**: Hooks, components, context (76.74%)
+- ✅ **SSR Support**: Server-side utilities (comprehensive coverage)
 - ✅ **Error Handling**: Graceful fallbacks
-- 🟡 **React Native**: Platform-specific testing (in progress)
+- ✅ **Integration Tests**: React apps, Next.js, performance
+- 🟡 **React Native**: Platform-specific testing (80% coverage)
 
 ### **Running Tests:**
 ```bash
 npm test                    # Run all tests
-npm run test:coverage       # Run with coverage
-npm run test:watch          # Watch mode
+npm run test:coverage      # Run with coverage
+npm run test:watch         # Watch mode
 ```
 
 ## 🔄 **State Management**
@@ -229,12 +230,15 @@ npm run test:watch          # Watch mode
 ### **Default: Context API**
 The package uses React Context API by default, but supports multiple state management solutions:
 
-### **Custom Adapters:**
+### **Available Adapters:**
 ```tsx
-// Zustand (planned)
+// Context API (default) ✅
+import { TranslationProvider } from '@logistically/i18n-react-core';
+
+// Zustand (placeholder - coming soon)
 import { createZustandAdapter } from '@logistically/i18n-react-core/adapters/zustand';
 
-// Redux (planned)
+// Redux (placeholder - coming soon)
 import { createReduxAdapter } from '@logistically/i18n-react-core/adapters/redux';
 
 // Custom adapter
@@ -255,10 +259,10 @@ const customAdapter = (core) => ({
 ### **Pluralization:**
 ```tsx
 // Simple plural
-<TranslatedText key="user.count" params={{ count: 5 }} />
+<TranslatedText translationKey="user.count" params={{ count: 5 }} />
 
 // Complex plural rules
-<TranslatedText key="item.count" params={{ count: 21 }} />
+<TranslatedText translationKey="item.count" params={{ count: 21 }} />
 ```
 
 ### **RTL Support:**
@@ -267,7 +271,7 @@ const { isRTL, direction } = useLocale();
 
 // Automatic RTL detection
 <div dir={direction}>
-  <TranslatedText key="welcome.message" />
+  <TranslatedText translationKey="welcome.message" />
 </div>
 ```
 
@@ -291,7 +295,7 @@ import * as I18n from '@logistically/i18n-react-core';
 await utils.preloadTranslations(['en', 'fr']);
 
 // ✅ Good: Use fallbacks
-<TranslatedText key="missing.key" fallback="Default text" />
+<TranslatedText translationKey="missing.key" fallback="Default text" />
 ```
 
 ## 🔧 **Configuration**
@@ -302,6 +306,7 @@ const config = {
   defaultLocale: 'en',
   supportedLocales: ['en', 'fr', 'es'],
   translationsPath: 'src/translations',
+  serviceName: 'my-app', // Required field
   debug: {
     enabled: true,
     logMissingKeys: true,
@@ -326,11 +331,6 @@ const config = {
   },
 };
 ```
-
-## 📚 **Examples**
-
-### **Complete App Example:**
-See `examples/` directory for complete application examples.
 
 ### **Migration from react-i18next:**
 ```tsx
@@ -359,10 +359,8 @@ MIT License - see LICENSE file for details.
 
 ## 🆘 **Support**
 
-- **Documentation**: [Full documentation](https://github.com/onwello/i18n)
-- **Issues**: [GitHub Issues](https://github.com/onwello/i18n/issues)
-- **Discussions**: [GitHub Discussions](https://github.com/onwello/i18n/discussions)
+- **Documentation**: [Full documentation](https://github.com/onwello/i18n-react-core)
+- **Issues**: [GitHub Issues](https://github.com/onwello/i18n-react-core/issues)
+- **Discussions**: [GitHub Discussions](https://github.com/onwello/i18n-react-core/discussions)
 
 ---
-
-**Built with ❤️ by the Logistically Team**
