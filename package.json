@@ -1,6 +1,6 @@
 {
   "name": "@logistically/i18n-react-core",
-  "version": "1.0.1",
+  "version": "1.0.2",
   "description": "React integration for @logistically/i18n with state management agnostic design",
   "main": "dist/index.js",
   "module": "dist/index.esm.js",
