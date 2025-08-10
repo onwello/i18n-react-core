@@ -3,7 +3,7 @@ import { ViewStyle, TextStyle, ImageStyle } from 'react-native';
 
 // React Native specific component props
 export interface TranslatedTextRNProps {
-  key: string;
+  translationKey: string;
   params?: Record<string, any>;
   locale?: string;
   fallback?: string;

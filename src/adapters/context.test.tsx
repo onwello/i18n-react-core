@@ -1,6 +1,6 @@
 import React from 'react';
 import { render, screen, waitFor, act } from '@testing-library/react';
-import { TranslationProvider, useTranslation, useLocale } from './context';
+import { TranslationProvider, useTranslation, useLocale, useTranslationStore } from './context';
 import { ReactTranslationConfig } from '../types';
 
 const TestComponent = () => {
@@ -40,14 +40,18 @@ describe('Context Adapter', () => {
   });
 
   describe('TranslationProvider', () => {
-    it('should render children', () => {
-      render(
-        <TranslationProvider config={config}>
-          <div>Test Content</div>
-        </TranslationProvider>
-      );
+    it('should render children', async () => {
+      await act(async () => {
+        render(
+          <TranslationProvider config={config}>
+            <TestComponent />
+          </TranslationProvider>
+        );
+      });
 
-      expect(screen.getByText('Test Content')).toBeInTheDocument();
+      await waitFor(() => {
+        expect(screen.getByTestId('translation')).toBeInTheDocument();
+      });
     });
 
     it('should initialize with loading state', async () => {
@@ -80,12 +84,14 @@ describe('Context Adapter', () => {
     });
 
     it('should translate text correctly', async () => {
+      let container: HTMLElement;
+      
       await act(async () => {
-        render(
+        container = render(
           <TranslationProvider config={config}>
             <TestComponent />
           </TranslationProvider>
-        );
+        ).container;
       });
 
       await waitFor(() => {
@@ -278,6 +284,37 @@ describe('Context Adapter', () => {
       expect(adapter.initialize).toBeDefined();
       expect(adapter.destroy).toBeDefined();
     });
+
+    it('should handle notifyListeners with no listeners', () => {
+      const { createContextAdapter } = require('./context');
+      const { TranslationCore } = require('../core/TranslationCore');
+      
+      const core = new TranslationCore(config);
+      const adapter = createContextAdapter(core);
+      
+      // This should not throw when there are no listeners
+      expect(() => {
+        // Access the private method through the adapter instance
+        (adapter as any).notifyListeners();
+      }).not.toThrow();
+    });
+
+    it('should call core.initialize when adapter.initialize is called', async () => {
+      const { createContextAdapter } = require('./context');
+      const { TranslationCore } = require('../core/TranslationCore');
+      
+      const core = new TranslationCore(config);
+      const adapter = createContextAdapter(core);
+      
+      // Mock the core.initialize method
+      const initializeSpy = jest.spyOn(core, 'initialize').mockResolvedValue();
+      
+      await adapter.initialize();
+      
+      expect(initializeSpy).toHaveBeenCalled();
+      
+      initializeSpy.mockRestore();
+    });
   });
 
   describe('error handling edge cases', () => {
@@ -301,6 +338,56 @@ describe('Context Adapter', () => {
       // Just verify the component still renders
       expect(screen.getByTestId('locale')).toBeInTheDocument();
       consoleSpy.mockRestore();
+    });
+
+    it('should handle initialization errors and still set store', async () => {
+      // Mock TranslationCore to throw an error during initialization
+      const mockCore = {
+        initialize: jest.fn().mockRejectedValue(new Error('Mock initialization error')),
+        destroy: jest.fn(),
+        getState: jest.fn().mockReturnValue({ locale: 'en', isLoading: false, error: null }),
+        setState: jest.fn(),
+        subscribe: jest.fn(),
+        notifyListeners: jest.fn()
+      };
+
+      const { TranslationCore } = require('../core/TranslationCore');
+      jest.spyOn(TranslationCore.prototype, 'initialize').mockRejectedValue(new Error('Mock error'));
+
+      const consoleSpy = jest.spyOn(console, 'error').mockImplementation();
+      
+      await act(async () => {
+        render(
+          <TranslationProvider config={config}>
+            <TestComponent />
+          </TranslationProvider>
+        );
+      });
+
+      // Even with error, the component should render
+      await waitFor(() => {
+        expect(screen.getByTestId('locale')).toBeInTheDocument();
+      });
+
+      consoleSpy.mockRestore();
+      jest.restoreAllMocks();
+    });
+  });
+
+  describe('useTranslationStore error handling', () => {
+    it('should throw error when used outside provider', () => {
+      const TestComponentOutsideProvider = () => {
+        try {
+          const store = useTranslationStore();
+          return <div>Store: {store.locale}</div>;
+        } catch (error) {
+          return <div>Error: {(error as Error).message}</div>;
+        }
+      };
+
+      render(<TestComponentOutsideProvider />);
+      
+      expect(screen.getByText(/useTranslationStore must be used within a TranslationProvider/)).toBeInTheDocument();
     });
   });
 });

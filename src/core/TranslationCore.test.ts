@@ -289,5 +289,285 @@ describe('TranslationCore', () => {
       
       consoleSpy.mockRestore();
     });
+
+    it('should handle object debug config without logMissingKeys', () => {
+      const debugConfig = { 
+        ...config, 
+        debug: { enabled: true, logMissingKeys: false } 
+      };
+      const core = new TranslationCore(debugConfig);
+      
+      // Mock console.warn
+      const consoleSpy = jest.spyOn(console, 'warn').mockImplementation();
+      
+      // Mock translation service to throw error
+      jest.spyOn(core['translationService'], 'translate').mockImplementation(() => {
+        throw new Error('Translation error');
+      });
+
+      core.translate('test.key');
+      
+      // Should not log warning when logMissingKeys is false
+      expect(consoleSpy).not.toHaveBeenCalled();
+      
+      consoleSpy.mockRestore();
+    });
+
+    it('should handle object debug config with undefined logMissingKeys', () => {
+      const debugConfig = { 
+        ...config, 
+        debug: { enabled: true } 
+      };
+      const core = new TranslationCore(debugConfig);
+      
+      // Mock console.warn
+      const consoleSpy = jest.spyOn(console, 'warn').mockImplementation();
+      
+      // Mock translation service to throw error
+      jest.spyOn(core['translationService'], 'translate').mockImplementation(() => {
+        throw new Error('Translation error');
+      });
+
+      core.translate('test.key');
+      
+      // Should not log warning when logMissingKeys is undefined
+      expect(consoleSpy).not.toHaveBeenCalled();
+      
+      consoleSpy.mockRestore();
+    });
+  });
+
+  describe('error handling edge cases', () => {
+    it('should handle translatePlural with object debug config and logMissingKeys enabled', () => {
+      const debugConfig = { 
+        ...config, 
+        debug: { enabled: true, logMissingKeys: true } 
+      };
+      const core = new TranslationCore(debugConfig);
+      
+      // Mock console.warn
+      const consoleSpy = jest.spyOn(console, 'warn').mockImplementation();
+      
+      // Mock translation service to throw error
+      jest.spyOn(core['translationService'], 'translatePlural').mockImplementation(() => {
+        throw new Error('Translation error');
+      });
+
+      core.translatePlural('test.key', 5);
+      
+      expect(consoleSpy).toHaveBeenCalledWith('Translation key not found: test.key (locale: en)');
+      
+      consoleSpy.mockRestore();
+    });
+
+    it('should handle translatePlural with object debug config and logMissingKeys disabled', () => {
+      const debugConfig = { 
+        ...config, 
+        debug: { enabled: true, logMissingKeys: false } 
+      };
+      const core = new TranslationCore(debugConfig);
+      
+      // Mock console.warn
+      const consoleSpy = jest.spyOn(console, 'warn').mockImplementation();
+      
+      // Mock translation service to throw error
+      jest.spyOn(core['translationService'], 'translatePlural').mockImplementation(() => {
+        throw new Error('Translation error');
+      });
+
+      core.translatePlural('test.key', 5);
+      
+      // Should not log warning when logMissingKeys is false
+      expect(consoleSpy).not.toHaveBeenCalled();
+      
+      consoleSpy.mockRestore();
+    });
+
+    it('should handle initialization error properly', async () => {
+      const core = new TranslationCore(config);
+      
+      // Mock loadTranslations to throw error
+      jest.spyOn(core as any, 'loadTranslations').mockRejectedValue(new Error('Load error'));
+      
+      await expect(core.initialize()).rejects.toThrow('Load error');
+      
+      expect(core.getState().isLoading).toBe(false);
+      expect(core.getState().error).toBeDefined();
+    });
+
+    it('should handle setLocale error properly', async () => {
+      const core = new TranslationCore(config);
+      await core.initialize();
+      
+      // Mock loadTranslations to throw error
+      jest.spyOn(core as any, 'loadTranslations').mockRejectedValue(new Error('Load error'));
+      
+      await expect(core.setLocale('fr')).rejects.toThrow('Load error');
+      
+      expect(core.getState().isLoading).toBe(false);
+      expect(core.getState().error).toBeDefined();
+    });
+  });
+
+  describe('error handling and edge cases', () => {
+    it('should handle translation service errors gracefully', async () => {
+      const mockTranslationService = {
+        translate: jest.fn().mockImplementation(() => {
+          throw new Error('Translation service error');
+        }),
+        translatePlural: jest.fn().mockImplementation(() => {
+          throw new Error('Translation service error');
+        }),
+        formatDateForLocale: jest.fn().mockReturnValue('formatted date'),
+        formatNumberForLocale: jest.fn().mockReturnValue('formatted number'),
+        getTextDirection: jest.fn().mockReturnValue('ltr'),
+        isRTLLocale: jest.fn().mockReturnValue(false),
+        clearCache: jest.fn(),
+        loadTranslationsForLocale: jest.fn().mockResolvedValue({}),
+        reloadTranslations: jest.fn().mockResolvedValue(undefined),
+        getKeys: jest.fn().mockReturnValue([])
+      };
+
+      const core = new TranslationCore({
+        serviceName: 'test-service',
+        defaultLocale: 'en',
+        debug: { enabled: true, logMissingKeys: true }
+      });
+
+      // Replace the translation service with our mock
+      (core as any).translationService = mockTranslationService;
+
+      // Test translate with error
+      const result = core.translate('test.key');
+      expect(result).toBe('test.key'); // Should return the key on error
+
+      // Test translatePlural with error
+      const pluralResult = core.translatePlural('test.key', 1);
+      expect(pluralResult).toBe('test.key'); // Should return the key on error
+    });
+
+    it('should handle initialization errors properly', async () => {
+      const mockTranslationService = {
+        translate: jest.fn().mockReturnValue('translated'),
+        translatePlural: jest.fn().mockReturnValue('translated'),
+        formatDateForLocale: jest.fn().mockReturnValue('formatted date'),
+        formatNumberForLocale: jest.fn().mockReturnValue('formatted number'),
+        getTextDirection: jest.fn().mockReturnValue('ltr'),
+        isRTLLocale: jest.fn().mockReturnValue(false),
+        clearCache: jest.fn(),
+        loadTranslationsForLocale: jest.fn().mockResolvedValue({}),
+        reloadTranslations: jest.fn().mockImplementation(() => {
+          throw new Error('Load error');
+        }),
+        getKeys: jest.fn().mockReturnValue([])
+      };
+
+      const core = new TranslationCore({
+        serviceName: 'test-service',
+        defaultLocale: 'en',
+        debug: { enabled: true, logMissingKeys: true }
+      });
+
+      // Replace the translation service with our mock
+      (core as any).translationService = mockTranslationService;
+
+      await expect(core.initialize('en')).rejects.toThrow('Load error');
+      
+      // State should be updated to reflect the error
+      const state = core.getState();
+      expect(state.isLoading).toBe(false);
+      expect(state.error).toBeInstanceOf(Error);
+      expect(state.error?.message).toBe('Load error');
+    });
+
+    it('should handle setLocale errors properly', async () => {
+      const mockTranslationService = {
+        translate: jest.fn().mockReturnValue('translated'),
+        translatePlural: jest.fn().mockReturnValue('translated'),
+        formatDateForLocale: jest.fn().mockReturnValue('formatted date'),
+        formatNumberForLocale: jest.fn().mockReturnValue('formatted number'),
+        getTextDirection: jest.fn().mockReturnValue('ltr'),
+        isRTLLocale: jest.fn().mockReturnValue(false),
+        clearCache: jest.fn(),
+        loadTranslationsForLocale: jest.fn().mockResolvedValue({}),
+        reloadTranslations: jest.fn().mockImplementation(() => {
+          throw new Error('Load error');
+        }),
+        getKeys: jest.fn().mockReturnValue([])
+      };
+
+      const core = new TranslationCore({
+        serviceName: 'test-service',
+        defaultLocale: 'en',
+        debug: { enabled: true, logMissingKeys: true }
+      });
+
+      // Replace the translation service with our mock
+      (core as any).translationService = mockTranslationService;
+
+      await expect(core.setLocale('es')).rejects.toThrow('Load error');
+      
+      // State should be updated to reflect the error
+      const state = core.getState();
+      expect(state.isLoading).toBe(false);
+      expect(state.error).toBeInstanceOf(Error);
+      expect(state.error?.message).toBe('Load error');
+    });
+
+    it('should handle loadTranslations errors properly', async () => {
+      const mockTranslationService = {
+        translate: jest.fn().mockReturnValue('translated'),
+        translatePlural: jest.fn().mockReturnValue('translated'),
+        formatDateForLocale: jest.fn().mockReturnValue('formatted date'),
+        formatNumberForLocale: jest.fn().mockReturnValue('formatted number'),
+        getTextDirection: jest.fn().mockReturnValue('ltr'),
+        isRTLLocale: jest.fn().mockReturnValue(false),
+        clearCache: jest.fn(),
+        loadTranslationsForLocale: jest.fn().mockResolvedValue({}),
+        reloadTranslations: jest.fn().mockImplementation(() => {
+          throw new Error('Load error');
+        }),
+        getKeys: jest.fn().mockReturnValue([])
+      };
+
+      const core = new TranslationCore({
+        serviceName: 'test-service',
+        defaultLocale: 'en',
+        debug: { enabled: true, logMissingKeys: true }
+      });
+
+      // Replace the translation service with our mock
+      (core as any).translationService = mockTranslationService;
+
+      await expect(core.loadTranslations('es')).rejects.toThrow('Load error');
+      
+      // State should be updated to reflect the error
+      const state = core.getState();
+      expect(state.isLoading).toBe(false);
+      expect(state.error).toBeInstanceOf(Error);
+      expect(state.error?.message).toBe('Load error');
+    });
+
+    it('should handle debug configuration properly', () => {
+      const core = new TranslationCore({
+        serviceName: 'test-service',
+        defaultLocale: 'en',
+        debug: { enabled: true, logMissingKeys: true }
+      });
+
+      // Test with debug enabled
+      const result = core.translate('missing.key');
+      expect(result).toBe('missing.key');
+
+      // Test with debug disabled
+      const coreNoDebug = new TranslationCore({
+        serviceName: 'test-service',
+        defaultLocale: 'en',
+        debug: { enabled: false, logMissingKeys: false }
+      });
+
+      const resultNoDebug = coreNoDebug.translate('missing.key');
+      expect(resultNoDebug).toBe('missing.key');
+    });
   });
 });

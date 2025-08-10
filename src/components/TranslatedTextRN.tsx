@@ -4,7 +4,7 @@ import { useTranslation } from '../adapters/context';
 import { TranslatedTextRNProps } from '../types/react-native';
 
 export const TranslatedTextRN: React.FC<TranslatedTextRNProps> = ({
-  key: translationKey,
+  translationKey,
   params,
   locale,
   fallback,
@@ -14,12 +14,12 @@ export const TranslatedTextRN: React.FC<TranslatedTextRNProps> = ({
   debug = false,
   ...props
 }) => {
-  const { t, translate, isLoading, error } = useTranslation();
+  const { t, translate, isLoading, error, locale: currentLocale } = useTranslation();
 
   // Handle loading state
   if (isLoading) {
     return (
-      <Component style={style} {...props}>
+      <Component style={style as any} {...props}>
         {fallback || translationKey}
       </Component>
     );
@@ -31,7 +31,7 @@ export const TranslatedTextRN: React.FC<TranslatedTextRNProps> = ({
       console.error('Translation error:', error);
     }
     return (
-      <Component style={style} {...props}>
+      <Component style={style as any} {...props}>
         {fallback || translationKey}
       </Component>
     );
@@ -41,29 +41,31 @@ export const TranslatedTextRN: React.FC<TranslatedTextRNProps> = ({
   let translatedText: string;
   
   try {
-    if (locale) {
-      // Use specific locale
-      translatedText = translate(translationKey, params);
-    } else {
-      // Use current locale
-      translatedText = t(translationKey, { params });
+    translatedText = translate(translationKey, params);
+    
+    // Check if translation failed (returned the key itself)
+    if (translatedText === translationKey && fallback) {
+      translatedText = fallback;
     }
   } catch (error) {
     if (debug) {
-      console.warn(`Translation failed for key: ${translationKey}`, error);
+      console.warn(`Translation key not found: ${translationKey}`);
     }
     translatedText = fallback || translationKey;
   }
 
   // If no translation found and debug is enabled
   if (translatedText === translationKey && debug) {
-    console.warn(`Translation key not found: ${translationKey}`);
+    console.warn(`Translation key not found: ${translationKey} (locale: ${locale || currentLocale})`);
   }
+
+  // Use fallback if translation is the same as the key (meaning it wasn't found)
+  const finalText = translatedText === translationKey && fallback ? fallback : translatedText;
 
   // Render the component
   return (
-    <Component style={style} {...props}>
-      {children || translatedText}
+    <Component style={style as any} {...props}>
+      {children || finalText}
     </Component>
   );
 };
@@ -81,7 +83,7 @@ export const TranslatedView: React.FC<TranslatedTextRNProps> = (props) => (
 export const TranslatedHeading: React.FC<TranslatedTextRNProps> = (props) => (
   <TranslatedTextRN 
     component={Text} 
-    style={[{ fontSize: 24, fontWeight: 'bold' }, props.style]} 
+    style={[{ fontSize: 24, fontWeight: 'bold' }, props.style] as any} 
     {...props} 
   />
 );
@@ -89,7 +91,7 @@ export const TranslatedHeading: React.FC<TranslatedTextRNProps> = (props) => (
 export const TranslatedSubheading: React.FC<TranslatedTextRNProps> = (props) => (
   <TranslatedTextRN 
     component={Text} 
-    style={[{ fontSize: 18, fontWeight: '600' }, props.style]} 
+    style={[{ fontSize: 18, fontWeight: '600' }, props.style] as any} 
     {...props} 
   />
 );
@@ -97,7 +99,7 @@ export const TranslatedSubheading: React.FC<TranslatedTextRNProps> = (props) => 
 export const TranslatedBody: React.FC<TranslatedTextRNProps> = (props) => (
   <TranslatedTextRN 
     component={Text} 
-    style={[{ fontSize: 16 }, props.style]} 
+    style={[{ fontSize: 16 }, props.style] as any} 
     {...props} 
   />
 );
@@ -105,7 +107,7 @@ export const TranslatedBody: React.FC<TranslatedTextRNProps> = (props) => (
 export const TranslatedCaption: React.FC<TranslatedTextRNProps> = (props) => (
   <TranslatedTextRN 
     component={Text} 
-    style={[{ fontSize: 14, color: '#666' }, props.style]} 
+    style={[{ fontSize: 14, color: '#666' }, props.style] as any} 
     {...props} 
   />
 );

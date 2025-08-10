@@ -10,9 +10,16 @@ jest.mock('@logistically/i18n', () => ({
         'welcome.message': 'Hello, {name}!',
         'user.count': 'You have {count} users',
         'user.count_plural': 'You have {count} users',
+        'user.profile': 'User Profile: {name}',
         'error.not_found': 'Not found',
       };
-      let translation = translations[key] || key;
+      
+      // If translation not found, return the key (graceful fallback)
+      if (!translations[key]) {
+        return key;
+      }
+      
+      let translation = translations[key];
       
       if (params) {
         Object.keys(params).forEach(param => {
@@ -54,8 +61,37 @@ jest.mock('@logistically/i18n', () => ({
 
 // Mock React Native components for testing
 jest.mock('react-native', () => ({
-  Text: 'text',
-  View: 'view',
+  Text: ({ children, style, ...props }: any) => {
+    const { key, ...restProps } = props;
+    return React.createElement('div', { 
+      ...restProps, 
+      key,
+      style,
+      'data-testid': 'text',
+      className: 'react-native-text'
+    }, children);
+  },
+  View: ({ children, style, ...props }: any) => {
+    const { key, ...restProps } = props;
+    return React.createElement('div', { 
+      ...restProps, 
+      key,
+      style,
+      'data-testid': 'view',
+      className: 'react-native-view'
+    }, children);
+  },
+  Image: ({ source, style, ...props }: any) => {
+    const { key, ...restProps } = props;
+    return React.createElement('img', { 
+      ...restProps, 
+      key,
+      src: source?.uri || source,
+      style,
+      'data-testid': 'image',
+      className: 'react-native-image'
+    });
+  }
 }));
 
 

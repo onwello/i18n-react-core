@@ -10,6 +10,7 @@ module.exports = {
     '!src/**/*.d.ts',
     '!src/test/**/*',
     '!src/**/index.ts',
+    '!src/examples/**/*',
   ],
   coverageThreshold: {
     global: {

@@ -12,7 +12,7 @@ export interface TranslationState {
 
 // Core actions interface
 export interface TranslationActions {
-  setLocale: (locale: string) => void;
+  setLocale: (locale: string) => Promise<void>;
   loadTranslations: (locale: string) => Promise<void>;
   translate: (key: string, params?: Record<string, any>) => string;
   translatePlural: (key: string, count: number, params?: Record<string, any>) => string;
@@ -62,7 +62,7 @@ export interface UseTranslationReturn {
   isLoading: boolean;
   error: Error | null;
   locale: string;
-  setLocale: (locale: string) => void;
+  setLocale: (locale: string) => Promise<void>;
   isRTLLocale: (locale: string) => boolean;
   reloadTranslations: () => Promise<void>;
   clearCache: () => void;
@@ -71,7 +71,7 @@ export interface UseTranslationReturn {
 // Locale hook return type
 export interface UseLocaleReturn {
   locale: string;
-  setLocale: (locale: string) => void;
+  setLocale: (locale: string) => Promise<void>;
   supportedLocales: string[];
   isRTL: boolean;
   direction: 'ltr' | 'rtl' | 'auto';
@@ -91,7 +91,7 @@ export interface TranslatedTextProps {
   params?: Record<string, any>;
   locale?: string;
   fallback?: string;
-  component?: React.ComponentType<any>;
+  component?: React.ComponentType<any> | keyof JSX.IntrinsicElements;
   className?: string;
   style?: React.CSSProperties;
   children?: ReactNode;

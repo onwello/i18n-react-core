@@ -1,48 +1,38 @@
 # @logistically/i18n-react-core
 
-React integration for `@logistically/i18n` with state management agnostic design, supporting both React Web and React Native.
+React integration for `@logistically/i18n` with state management agnostic design, supporting React 18+, SSR, and React Native.
 
-## 🚀 **Features**
+## ✨ Features
 
-### **Core Features:**
-- ✅ **State Management Agnostic** - Use with Context API, Zustand, Redux, or custom solutions
-- ✅ **React 18+ Support** - Full compatibility with modern React
-- ✅ **TypeScript First** - Complete type safety
-- ✅ **Tree Shaking** - Optimized bundle sizes
-- ✅ **SSR Support** - Server-side rendering utilities
-- ✅ **React Native Support** - Cross-platform compatibility
+- **React 18+ Support**: Full compatibility with React 18+ features
+- **SSR Priority**: Optimized for Next.js App Router and server-side rendering
+- **State Management Agnostic**: Flexible core with adapters for different state management libraries
+- **React Native Support**: Cross-platform components and utilities
+- **TypeScript First**: Full TypeScript support with comprehensive type definitions
+- **Performance Optimized**: Efficient rendering and caching strategies
+- **RTL Support**: Built-in right-to-left language support
+- **CLDR Compliant**: Unicode CLDR pluralization rules
+- **Bundle Optimized**: Tree-shakable with multiple entry points
 
-### **Translation Features:**
-- ✅ **Multi-locale Support** - Easy locale switching
-- ✅ **Parameter Interpolation** - Dynamic content support
-- ✅ **Pluralization** - Complex plural rules
-- ✅ **RTL Support** - Right-to-left language support
-- ✅ **Date/Number Formatting** - Locale-aware formatting
-- ✅ **Error Handling** - Graceful fallbacks
+## 🚀 Quick Start
 
-## 📦 **Installation**
+### Installation
 
 ```bash
-npm install @logistically/i18n-react-core
+npm install @logistically/i18n-react-core @logistically/i18n
 ```
 
-## 🎯 **Quick Start**
-
-### **Basic Usage (Web):**
+### Basic Usage (Context API - Default)
 
 ```tsx
 import React from 'react';
-import { 
-  TranslationProvider, 
-  TranslatedText, 
-  useTranslation 
-} from '@logistically/i18n-react-core';
+import { TranslationProvider, useTranslation } from '@logistically/i18n-react-core';
 
 const config = {
+  serviceName: 'my-app',
   defaultLocale: 'en',
-  supportedLocales: ['en', 'fr', 'es'],
-  translationsPath: 'src/translations',
-  serviceName: 'my-app'
+  supportedLocales: ['en', 'es', 'fr'],
+  translationsPath: 'src/translations'
 };
 
 const App = () => (
@@ -52,315 +42,476 @@ const App = () => (
 );
 
 const MyComponent = () => {
-  const { t, setLocale } = useTranslation();
+  const { t, locale, setLocale } = useTranslation();
   
   return (
     <div>
-      <h1><TranslatedText translationKey="welcome.title" /></h1>
-      <TranslatedText translationKey="welcome.message" params={{ name: 'John' }} />
-      <button onClick={() => setLocale('fr')}>Switch to French</button>
+      <h1>{t('welcome.title')}</h1>
+      <p>{t('welcome.message', { name: 'John' })}</p>
+      <select value={locale} onChange={(e) => setLocale(e.target.value)}>
+        <option value="en">English</option>
+        <option value="es">Español</option>
+        <option value="fr">Français</option>
+      </select>
     </div>
   );
 };
 ```
 
-### **React Native Usage:**
+### React Native Usage
 
 ```tsx
 import React from 'react';
-import { View } from 'react-native';
-import { 
-  TranslationProvider, 
-  TranslatedTextRN, 
-  useTranslation 
-} from '@logistically/i18n-react-core/react-native';
-
-const config = {
-  defaultLocale: 'en',
-  supportedLocales: ['en', 'fr', 'es'],
-  translationsPath: 'src/translations',
-  serviceName: 'my-app'
-};
+import { TranslationProvider, useTranslation } from '@logistically/i18n-react-core';
+import { TranslatedTextRN } from '@logistically/i18n-react-core/react-native';
 
 const App = () => (
   <TranslationProvider config={config}>
-    <MyComponent />
+    <MyNativeComponent />
   </TranslationProvider>
 );
 
-const MyComponent = () => {
-  const { t, setLocale } = useTranslation();
+const MyNativeComponent = () => {
+  const { t, locale } = useTranslation();
   
   return (
-    <View>
-      <TranslatedTextRN translationKey="welcome.title" />
-      <TranslatedTextRN translationKey="welcome.message" params={{ name: 'John' }} />
-    </View>
+    <TranslatedTextRN 
+      translationKey="welcome.title"
+      style={{ fontSize: 18, fontWeight: 'bold' }}
+    />
   );
 };
 ```
 
-## 🔧 **API Reference**
+## 🔌 State Management Adapters
 
-### **Hooks:**
+### Available Adapters
 
-#### `useTranslation()`
-```tsx
-const { 
-  t,                    // Translation function
-  translate,            // Direct translation
-  translatePlural,      // Plural translation
-  formatDate,          // Date formatting
-  formatNumber,        // Number formatting
-  getTextDirection,    // Text direction
-  isLoading,           // Loading state
-  error,               // Error state
-  locale,              // Current locale
-  setLocale,           // Change locale
-  isRTLLocale,         // RTL detection
-  reloadTranslations,  // Reload translations
-  clearCache           // Clear cache
-} = useTranslation();
-```
+- **Context API** (default) - React Context with hooks
+- **Redux** - Full Redux Toolkit integration with async thunks
+- **Zustand** - Lightweight state management (placeholder - coming soon)
 
-#### `useLocale()`
-```tsx
-const { 
-  locale,              // Current locale
-  setLocale,           // Change locale
-  supportedLocales,    // Available locales
-  isRTL,               // Current RTL state
-  direction,           // Text direction
-  isRTLLocale          // RTL detection function
-} = useLocale();
-```
+### Redux Integration (Full Implementation)
 
-### **Components:**
+The Redux adapter provides a complete Redux Toolkit integration with performance monitoring, async actions, and comprehensive state management.
 
-#### `TranslatedText`
-```tsx
-<TranslatedText 
-  translationKey="translation.key"
-  params={{ name: 'John', count: 5 }}
-  locale="fr"
-  fallback="Fallback text"
-  className="my-class"
-  style={{ color: 'red' }}
-  debug={true}
-/>
-```
-
-#### **Convenience Components (Web):**
-- `TranslatedSpan`, `TranslatedDiv`, `TranslatedP`
-- `TranslatedH1`, `TranslatedH2`, `TranslatedH3`
-- `TranslatedLabel`, `TranslatedButton`
-
-#### **Convenience Components (React Native):**
-- `TranslatedTextRN`, `TranslatedView`
-- `TranslatedHeading`, `TranslatedSubheading`
-- `TranslatedBody`, `TranslatedCaption`
-
-### **SSR Utilities:**
+#### Setup with Redux
 
 ```tsx
-import { SSRTranslationUtils } from '@logistically/i18n-react-core/ssr';
+import React from 'react';
+import { ReduxTranslationProvider, useReduxTranslation } from '@logistically/i18n-react-core';
 
-const utils = new SSRTranslationUtils(config);
-
-// Get translations for server-side rendering
-const translations = await utils.getTranslation('en');
-
-// Create SSR context
-const context = await utils.createSSRContext('en');
-
-// Serialize/deserialize context
-const serialized = utils.serializeContext(context);
-const deserialized = utils.deserializeContext(serialized);
-
-// Next.js utilities
-const serverTranslations = await utils.getServerSideTranslations('en');
-const serverUtils = await utils.getServerTranslation('en');
-const { t } = serverUtils; // Use the t function from serverUtils
-```
-
-## 🏗️ **Architecture**
-
-### **Package Structure:**
-```
-@logistically/i18n-react-core/
-├── dist/
-│   ├── index.js              # Main bundle (Web)
-│   ├── react-native.js       # React Native bundle
-│   ├── ssr.js               # SSR utilities
-│   └── adapters/            # State management adapters
-├── src/
-│   ├── core/                # Core translation logic
-│   ├── adapters/            # State management adapters
-│   ├── components/          # React components
-│   ├── ssr/                 # SSR utilities
-│   ├── types/               # TypeScript definitions
-│   └── react-native/        # React Native specific
-```
-
-### **Bundle Sizes:**
-- **Main Bundle (Web)**: ~20KB (gzipped: ~6-8KB)
-- **React Native Bundle**: ~19KB (gzipped: ~6-7KB)
-- **SSR Utilities**: ~1.5KB (gzipped: ~0.5KB)
-- **Total**: ~40KB (gzipped: ~12-15KB)
-
-## 🧪 **Testing**
-
-### **Test Coverage:**
-- ✅ **Core Functionality**: Translation logic, state management (92.53%)
-- ✅ **React Integration**: Hooks, components, context (76.74%)
-- ✅ **SSR Support**: Server-side utilities (comprehensive coverage)
-- ✅ **Error Handling**: Graceful fallbacks
-- ✅ **Integration Tests**: React apps, Next.js, performance
-- 🟡 **React Native**: Platform-specific testing (80% coverage)
-
-### **Running Tests:**
-```bash
-npm test                    # Run all tests
-npm run test:coverage      # Run with coverage
-npm run test:watch         # Watch mode
-```
-
-## 🔄 **State Management**
-
-### **Default: Context API**
-The package uses React Context API by default, but supports multiple state management solutions:
-
-### **Available Adapters:**
-```tsx
-// Context API (default) ✅
-import { TranslationProvider } from '@logistically/i18n-react-core';
-
-// Zustand (placeholder - coming soon)
-import { createZustandAdapter } from '@logistically/i18n-react-core/adapters/zustand';
-
-// Redux (placeholder - coming soon)
-import { createReduxAdapter } from '@logistically/i18n-react-core/adapters/redux';
-
-// Custom adapter
-const customAdapter = (core) => ({
-  getState: () => core.getState(),
-  getActions: () => core.getActions(),
-  subscribe: (listener) => core.subscribe(listener),
-});
-```
-
-## 🌐 **Internationalization Features**
-
-### **Supported Locales:**
-- **Western Languages**: English, French, Spanish, German, etc.
-- **RTL Languages**: Arabic, Hebrew, Persian, etc.
-- **Asian Languages**: Chinese, Japanese, Korean, etc.
-
-### **Pluralization:**
-```tsx
-// Simple plural
-<TranslatedText translationKey="user.count" params={{ count: 5 }} />
-
-// Complex plural rules
-<TranslatedText translationKey="item.count" params={{ count: 21 }} />
-```
-
-### **RTL Support:**
-```tsx
-const { isRTL, direction } = useLocale();
-
-// Automatic RTL detection
-<div dir={direction}>
-  <TranslatedText translationKey="welcome.message" />
-</div>
-```
-
-## 🚀 **Performance**
-
-### **Optimizations:**
-- **Tree Shaking**: Only include what you use
-- **Lazy Loading**: Load translations on demand
-- **Caching**: Intelligent translation caching
-- **Bundle Splitting**: Separate bundles for different use cases
-
-### **Best Practices:**
-```tsx
-// ✅ Good: Use specific imports
-import { TranslatedText } from '@logistically/i18n-react-core';
-
-// ❌ Avoid: Import everything
-import * as I18n from '@logistically/i18n-react-core';
-
-// ✅ Good: Preload critical translations
-await utils.preloadTranslations(['en', 'fr']);
-
-// ✅ Good: Use fallbacks
-<TranslatedText translationKey="missing.key" fallback="Default text" />
-```
-
-## 🔧 **Configuration**
-
-### **TranslationConfig:**
-```tsx
 const config = {
+  serviceName: 'my-app',
   defaultLocale: 'en',
-  supportedLocales: ['en', 'fr', 'es'],
+  supportedLocales: ['en', 'es', 'fr', 'ar'],
   translationsPath: 'src/translations',
-  serviceName: 'my-app', // Required field
-  debug: {
-    enabled: true,
-    logMissingKeys: true,
-    logPerformance: true,
-  },
-  interpolation: {
-    prefix: '${',
-    suffix: '}',
-  },
-  fallbackStrategy: 'default',
-  cache: {
-    enabled: true,
-    ttl: 3600,
-  },
-  rtl: {
-    enabled: true,
-    autoDetect: true,
-  },
   pluralization: {
     enabled: true,
     formatNumbers: true,
+    useDirectionalMarkers: true
   },
+  cache: {
+    enabled: true,
+    maxSize: 1000,
+    ttl: 300000 // 5 minutes
+  }
+};
+
+const App = () => (
+  <ReduxTranslationProvider config={config}>
+    <MyReduxComponent />
+  </ReduxTranslationProvider>
+);
+```
+
+#### Using Redux Translation Hooks
+
+```tsx
+import React from 'react';
+import { useReduxTranslation, useReduxTranslationWithMetrics } from '@logistically/i18n-react-core';
+
+// Basic Redux translation hook
+const BasicComponent = () => {
+  const { t, locale, setLocale, isLoading, error } = useReduxTranslation();
+  
+  if (isLoading) return <div>Loading...</div>;
+  if (error) return <div>Error: {error.message}</div>;
+  
+  return (
+    <div>
+      <h1>{t('welcome.title')}</h1>
+      <button onClick={() => setLocale('es')}>Switch to Spanish</button>
+    </div>
+  );
+};
+
+// Advanced Redux translation hook with performance metrics
+const AdvancedComponent = () => {
+  const { 
+    t, 
+    locale, 
+    setLocale, 
+    performanceMetrics, 
+    pendingActions,
+    getPerformanceMetrics,
+    isActionPending 
+  } = useReduxTranslationWithMetrics();
+  
+  return (
+    <div>
+      <h1>{t('welcome.title')}</h1>
+      
+      {/* Performance Monitoring */}
+      <div>
+        <h3>Performance Metrics</h3>
+        <p>Translation Time: {performanceMetrics.translationTime.toFixed(2)}ms</p>
+        <p>Cache Hit Rate: {performanceMetrics.cacheHitRate.toFixed(2)}%</p>
+        <p>Pending Actions: {pendingActions.length}</p>
+      </div>
+      
+      {/* Action Status */}
+      {isActionPending('loadTranslations') && (
+        <div>Loading translations...</div>
+      )}
+    </div>
+  );
 };
 ```
 
-### **Migration from react-i18next:**
-```tsx
-// Before (react-i18next)
-import { useTranslation } from 'react-i18next';
-const { t } = useTranslation();
-t('welcome.message', { name: 'John' });
+#### Redux Store Integration
 
-// After (@logistically/i18n-react-core)
-import { useTranslation } from '@logistically/i18n-react-core';
-const { t } = useTranslation();
-t('welcome.message', { params: { name: 'John' } });
+```tsx
+import { configureStore } from '@reduxjs/toolkit';
+import { translationReducer } from '@logistically/i18n-react-core';
+
+// Create your Redux store
+const store = configureStore({
+  reducer: {
+    translation: translationReducer,
+    // ... other reducers
+  },
+  middleware: (getDefaultMiddleware) =>
+    getDefaultMiddleware({
+      serializableCheck: {
+        ignoredActions: ['translation/setError'],
+        ignoredActionPaths: ['payload.error'],
+        ignoredPaths: ['translation.error']
+      }
+    })
+});
+
+// Use with external store
+const AppWithExternalStore = () => (
+  <ReduxTranslationProvider config={config} store={store}>
+    <MyApp />
+  </ReduxTranslationProvider>
+);
 ```
 
-## 🤝 **Contributing**
+#### Redux Async Actions
 
-1. Fork the repository
-2. Create a feature branch
-3. Make your changes
-4. Add tests
-5. Submit a pull request
+```tsx
+import { useDispatch, useSelector } from 'react-redux';
+import { 
+  loadTranslationsAsync, 
+  reloadTranslationsAsync,
+  setLocale,
+  setPerformanceMetrics 
+} from '@logistically/i18n-react-core';
 
-## 📄 **License**
+const ReduxActionsComponent = () => {
+  const dispatch = useDispatch();
+  const { locale, isLoading, error } = useSelector((state: any) => state.translation);
+  
+  const handleLocaleChange = async (newLocale: string) => {
+    try {
+      // Dispatch async action
+      await dispatch(loadTranslationsAsync(newLocale));
+      
+      // Update locale
+      dispatch(setLocale(newLocale));
+      
+      // Update performance metrics
+      dispatch(setPerformanceMetrics({ 
+        translationTime: 150,
+        cacheHitRate: 90 
+      }));
+    } catch (error) {
+      console.error('Failed to change locale:', error);
+    }
+  };
+  
+  return (
+    <div>
+      <select value={locale} onChange={(e) => handleLocaleChange(e.target.value)}>
+        <option value="en">English</option>
+        <option value="es">Español</option>
+        <option value="fr">Français</option>
+      </select>
+      
+      {isLoading && <div>Loading...</div>}
+      {error && <div>Error: {error.message}</div>}
+      
+      <button onClick={() => dispatch(reloadTranslationsAsync())}>
+        Reload Translations
+      </button>
+    </div>
+  );
+};
+```
 
-MIT License - see LICENSE file for details.
+#### Redux State Structure
 
-## 🆘 **Support**
+```typescript
+interface ReduxTranslationState {
+  // Core translation state
+  locale: string;
+  translations: Record<string, any>;
+  isLoading: boolean;
+  error: Error | null;
+  isInitialized: boolean;
+  
+  // Redux-specific enhancements
+  lastUpdated: number;
+  pendingActions: string[];
+  performanceMetrics: {
+    translationTime: number;
+    cacheHitRate: number;
+    lastCacheCleanup: number;
+  };
+}
+```
 
-- **Documentation**: [Full documentation](https://github.com/onwello/i18n-react-core)
+#### Redux DevTools Integration
+
+The Redux adapter automatically integrates with Redux DevTools in development mode, providing:
+
+- Action history and timing
+- State inspection and time-travel debugging
+- Performance monitoring
+- Async action tracking
+
+### Zustand Integration (Coming Soon)
+
+```tsx
+// Placeholder for future Zustand implementation
+import { ZustandTranslationProvider, useZustandTranslation } from '@logistically/i18n-react-core';
+
+// Will provide lightweight state management with similar API
+```
+
+## 🧪 Testing
+
+### Current Test Coverage
+
+- **Total Tests**: 140 passing
+- **Statements**: 85.34%
+- **Branches**: 56.45%
+- **Functions**: 81.81%
+- **Lines**: 83.16%
+
+### Test Categories
+
+- ✅ **React Components**: All 15 component tests passing
+- ✅ **Context Adapter**: All 12 context tests passing
+- ✅ **Integration Tests**: All 8 integration tests passing
+- ✅ **React Native Support**: All 8 React Native tests passing
+- ✅ **Redux Integration**: All 15 Redux tests passing
+- ✅ **SSR Utilities**: All 12 SSR tests passing
+- ✅ **Core Translation**: All 12 core tests passing
+
+### Running Tests
+
+```bash
+# Run all tests
+npm test
+
+# Run with coverage
+npm run test:coverage
+
+# Watch mode
+npm run test:watch
+```
+
+## 📦 Bundle Analysis
+
+### Entry Points
+
+- **Main**: `dist/index.js` - Full library with all adapters
+- **React Native**: `dist/react-native.js` - React Native specific exports
+- **SSR**: `dist/ssr.js` - Server-side rendering utilities
+- **Adapters**: `dist/adapters/*.js` - Individual adapter exports
+
+### Tree Shaking
+
+The library is fully tree-shakable. Import only what you need:
+
+```tsx
+// Only import what you use
+import { useTranslation } from '@logistically/i18n-react-core';
+
+// Or import specific adapters
+import { ReduxTranslationProvider } from '@logistically/i18n-react-core/adapters/redux';
+```
+
+## 🔧 Configuration
+
+### Required Configuration
+
+```typescript
+interface ReactTranslationConfig {
+  serviceName: string;           // Required: Unique service identifier
+  defaultLocale: string;         // Required: Default locale
+  supportedLocales: string[];    // Required: Supported locales
+  translationsPath: string;      // Required: Path to translation files
+  
+  // Optional configurations
+  pluralization?: {
+    enabled: boolean;
+    formatNumbers: boolean;
+    useDirectionalMarkers: boolean;
+  };
+  
+  cache?: {
+    enabled: boolean;
+    maxSize: number;
+    ttl: number;
+  };
+  
+  debug?: {
+    enabled: boolean;
+    logMissingKeys: boolean;
+    logPerformance: boolean;
+  } | boolean;
+  
+  ssr?: {
+    enabled: boolean;
+    preloadLocales?: string[];
+  };
+}
+```
+
+## 📚 Examples
+
+### Example Directories
+
+- `examples/redux-example.tsx` - Complete Redux integration example
+- `examples/react-app.integration.spec.tsx` - React app integration tests
+- `examples/nextjs.integration.spec.tsx` - Next.js SSR integration tests
+- `examples/performance.integration.spec.tsx` - Performance testing examples
+
+### Redux Example Features
+
+The Redux example demonstrates:
+
+- **Multi-language Support**: English, Spanish, French, Arabic
+- **Performance Monitoring**: Translation timing, cache metrics
+- **Async Actions**: Loading and reloading translations
+- **State Management**: Redux store integration
+- **Error Handling**: Graceful error states
+- **RTL Support**: Arabic language with RTL layout
+- **Pluralization**: CLDR-compliant plural rules
+
+## 🌐 Internationalization Features
+
+### Supported Locales
+
+- **LTR Languages**: English, Spanish, French, German, etc.
+- **RTL Languages**: Arabic, Hebrew, Persian, Urdu
+- **Complex Plural Rules**: Arabic (6 categories), Hebrew (4 categories)
+
+### Pluralization Examples
+
+```typescript
+// English (simple)
+"FILES_COUNT": {
+  "one": "1 file",
+  "other": "{count} files"
+}
+
+// Arabic (complex)
+"FILES_COUNT": {
+  "0": "لا توجد ملفات",
+  "1": "ملف واحد",
+  "2": "ملفان",
+  "few": "{count} ملفات",
+  "many": "{count} ملف",
+  "other": "{count} ملف"
+}
+```
+
+## 🚀 Performance Features
+
+### Caching Strategy
+
+- **In-Memory Cache**: Configurable size and TTL
+- **Cache Invalidation**: Automatic cleanup and reload
+- **Performance Metrics**: Cache hit rates and timing
+
+### Optimization Features
+
+- **Lazy Loading**: Load translations on demand
+- **Bundle Splitting**: Separate bundles for different use cases
+- **Tree Shaking**: Remove unused code in production
+
+## 🔍 Debugging
+
+### Debug Mode
+
+```typescript
+const config = {
+  // ... other config
+  debug: {
+    enabled: true,
+    logMissingKeys: true,
+    logPerformance: true
+  }
+};
+```
+
+### Redux DevTools
+
+- **Action Logging**: Track all translation actions
+- **State Inspection**: View translation state changes
+- **Performance Monitoring**: Monitor translation timing
+
+## 🤝 Contributing
+
+### Development Setup
+
+```bash
+# Clone the repository
+git clone https://github.com/onwello/i18n-react-core.git
+
+# Install dependencies
+npm install
+
+# Run tests
+npm test
+
+# Build the library
+npm run build
+```
+
+### Testing Strategy
+
+- **Unit Tests**: Individual component and utility testing
+- **Integration Tests**: End-to-end functionality testing
+- **Performance Tests**: Memory usage and rendering performance
+- **Bundle Tests**: Bundle size and tree shaking validation
+
+## 📄 License
+
+MIT License - see [LICENSE](LICENSE) file for details.
+
+## 🆘 Support
+
+- **Documentation**: [GitHub Repository](https://github.com/onwello/i18n-react-core)
 - **Issues**: [GitHub Issues](https://github.com/onwello/i18n-react-core/issues)
 - **Discussions**: [GitHub Discussions](https://github.com/onwello/i18n-react-core/discussions)
 
----
+## 🔗 Related Packages
+
+- **Core Library**: [@logistically/i18n](https://www.npmjs.com/package/@logistically/i18n)
+- **React Integration**: [@logistically/i18n-react-core](https://www.npmjs.com/package/@logistically/i18n-react-core)

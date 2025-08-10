@@ -28,6 +28,29 @@ export {
   ContextAdapter
 } from './adapters/context';
 
+// Redux adapter
+export {
+  ReduxAdapter,
+  createReduxAdapter,
+  translationReducer,
+  loadTranslationsAsync,
+  reloadTranslationsAsync,
+  useReduxTranslation,
+  useReduxTranslationWithMetrics
+} from './adapters/redux';
+
+export {
+  ReduxTranslationProvider,
+  useReduxStore,
+  useReduxAdapter
+} from './adapters/redux-provider';
+
+export type {
+  ReduxTranslationState,
+  ReduxTranslationActions,
+  ReduxTranslationStore
+} from './adapters/redux';
+
 // Components
 export {
   TranslatedText,
