@@ -307,7 +307,7 @@ describe('Context Adapter', () => {
       const adapter = createContextAdapter(core);
       
       // Mock the core.initialize method
-      const initializeSpy = jest.spyOn(core, 'initialize').mockResolvedValue();
+      const initializeSpy = jest.spyOn(core, 'initialize').mockResolvedValue(undefined);
       
       await adapter.initialize();
       

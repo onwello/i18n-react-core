@@ -7,6 +7,7 @@ describe('SSRTranslationUtils', () => {
 
   beforeEach(() => {
     config = {
+      serviceName: 'test-service',
       defaultLocale: 'en',
       supportedLocales: ['en', 'fr', 'es'],
       translationsPath: 'test-translations',

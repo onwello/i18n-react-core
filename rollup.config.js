@@ -94,36 +94,7 @@ export default [
       })
     ]
   },
-  // Zustand adapter
-  {
-    input: 'src/adapters/zustand.ts',
-    output: [
-      {
-        file: 'dist/adapters/zustand.js',
-        format: 'cjs',
-        sourcemap: true,
-        exports: 'named'
-      },
-      {
-        file: 'dist/adapters/zustand.esm.js',
-        format: 'esm',
-        sourcemap: true,
-        exports: 'named'
-      }
-    ],
-    external: ['react', 'react-dom', '@logistically/i18n', 'zustand'],
-    plugins: [
-      resolve(),
-      commonjs(),
-      typescript({ tsconfig: './tsconfig.json' }),
-      terser({
-        compress: {
-          drop_console: true,
-          drop_debugger: true
-        }
-      })
-    ]
-  },
+
   // Redux adapter
   {
     input: 'src/adapters/redux.ts',
